@@ -196,3 +196,88 @@ def get_chat_response(query: str, context: str) -> str:
         return response.choices[0].message.content
     except Exception as e:
         return f"Error: {str(e)}"
+
+# Streamlit user interface
+st.set_page_config(layout="wide", page_title="Budget 2025-26 Assistant")
+
+# Sidebar
+with st.sidebar:
+    st.title("📚 Guide")
+    st.markdown("""
+    ### How to Use
+    1. Ask any question about Budget 2025-26
+    2. For calculations, simply ask naturally
+    3. View sources for transparency
+    4. Inquire about specific schemes or initiatives
+
+    ### Important Note
+    This assistant provides answers based exclusively on the Union Budget 2025-26 data presented by the Finance Minister on February 1, 2025. Information outside this scope or about subsequent modifications may not be available.
+
+    ### Sample Questions
+    - What are the key highlights of Budget 2025-26?
+    - Calculate tax for income of 45 lakhs under new regime
+    - What are the major infrastructure projects announced?
+    - Show the breakdown of healthcare spending
+    - What are the changes in income tax slabs?
+    - What is the fiscal deficit target?
+    - Compare agriculture budget with previous year
+    - What are the new schemes announced for startups?
+    """)
+
+# Main content
+st.title("🏛️ Budget 2025-26 Assistant")
+
+# Initialize session state
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if 'cached_responses' not in st.session_state:
+    st.session_state.cached_responses = {}
+
+# Display chat history
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Chat input
+if prompt := st.chat_input("Ask about the Budget..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        message_placeholder.markdown("🤔 Processing...")
+
+        try:
+            # Check cache first
+            if prompt in st.session_state.cached_responses:
+                response = st.session_state.cached_responses[prompt]
+                relevant_chunks = st.session_state.cached_responses[f"{prompt}_chunks"]
+            else:
+                chunks = load_embeddings()
+                relevant_chunks = semantic_search(prompt, chunks)
+
+                if not relevant_chunks:
+                    message_placeholder.markdown("❌ No relevant information found.")
+                    st.stop()
+
+                context = "\n".join([chunk['content'] for chunk in relevant_chunks])
+                response = get_chat_response(prompt, context)
+
+                # Cache the response and chunks
+                st.session_state.cached_responses[prompt] = response
+                st.session_state.cached_responses[f"{prompt}_chunks"] = relevant_chunks
+
+            message_placeholder.markdown(response)
+
+            with st.expander("📑 Sources"):
+                for i, chunk in enumerate(relevant_chunks, 1):
+                    st.markdown(f"**Source {i}:**\n{chunk['content']}")
+
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": response
+            })
+
+        except Exception as e:
+            message_placeholder.markdown(f"❌ Error: {str(e)}")
