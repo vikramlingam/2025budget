@@ -6,13 +6,19 @@ from numpy.linalg import norm
 import os
 from typing import List, Dict
 import re
-from dotenv import load_dotenv
 
-if 'OPENAI_API_KEY' not in st.secrets:
-    st.error('OpenAI API key not found! Please add it to your app secrets.')
-    st.stop()
+def init_openai_client():
+    try:
+        if 'OPENAI_API_KEY' in st.secrets:
+            return OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
+        else:
+            st.error("OpenAI API key not found in secrets.")
+            st.stop()
+    except Exception as e:
+        st.error(f"Error initializing OpenAI client: {str(e)}")
+        st.stop()
 
-client = OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
+client = init_openai_client()
 
 def convert_indian_format(value_str: str) -> float:
     """Convert Indian number format (crores, lakhs) to float"""
