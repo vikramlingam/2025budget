@@ -6,8 +6,9 @@ from numpy.linalg import norm
 import os
 from typing import List, Dict
 import re
+import time  # For handling rate limits
 
-# Initialize OpenAI client with proper error handling
+# Initialize OpenAI client
 def init_openai_client():
     """Initialize OpenAI client with proper error handling"""
     try:
@@ -23,6 +24,12 @@ def init_openai_client():
 
 # Initialize the client
 init_openai_client()
+
+def handle_rate_limit(e):
+    """Handle rate limit errors by waiting and retrying."""
+    if "Rate limit reached" in str(e):
+        st.warning("Rate limit reached. Retrying in 20 seconds...")
+        time.sleep(20)  # Wait for 20 seconds before retrying
 
 def convert_indian_format(value_str: str) -> float:
     """Convert Indian number format (crores, lakhs) to float"""
@@ -75,7 +82,7 @@ def optimize_prompt(original_query: str) -> str:
             }
         ]
 
-        response = openai.ChatCompletion.create(  # Use openai module directly
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
             temperature=0.3,
@@ -83,10 +90,12 @@ def optimize_prompt(original_query: str) -> str:
         )
 
         return response.choices[0].message.content.strip()
+    except openai.error.RateLimitError as e:
+        handle_rate_limit(e)
+        return optimize_prompt(original_query)  # Retry the request
     except Exception as e:
         return original_query
 
-# RAG functions will start here
 @st.cache_data
 def load_embeddings() -> List[Dict]:
     """Load pre-computed embeddings"""
@@ -102,11 +111,14 @@ def load_embeddings() -> List[Dict]:
 def create_embedding(text: str) -> List[float]:
     """Create embedding for search query with caching"""
     try:
-        response = openai.Embedding.create(  # Use openai module directly
+        response = openai.Embedding.create(
             model="text-embedding-ada-002",
             input=text
         )
         return response.data[0].embedding
+    except openai.error.RateLimitError as e:
+        handle_rate_limit(e)
+        return create_embedding(text)  # Retry the request
     except Exception as e:
         st.error(f"Error creating embedding: {e}")
         return None
@@ -134,7 +146,6 @@ def semantic_search(query: str, chunks: List[Dict], top_k: int = 3) -> List[Dict
 
 def analyze_calculation_request(query: str) -> dict:
     """Streamlined calculation analysis"""
-    # Quick check without API call
     calculation_keywords = ['calculate', 'compute', 'what is the tax', 'percentage',
                           'growth rate', 'difference between']
     if not any(keyword in query.lower() for keyword in calculation_keywords):
@@ -152,7 +163,7 @@ def analyze_calculation_request(query: str) -> dict:
             }
         ]
 
-        response = openai.ChatCompletion.create(  # Use openai module directly
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
             temperature=0,
@@ -160,13 +171,15 @@ def analyze_calculation_request(query: str) -> dict:
         )
 
         return json.loads(response.choices[0].message.content)
+    except openai.error.RateLimitError as e:
+        handle_rate_limit(e)
+        return analyze_calculation_request(query)  # Retry the request
     except Exception as e:
         return {"needs_calculation": False}
 
 def get_chat_response(query: str, context: str) -> str:
-    """Optimized response generation"""
+    """Optimized response generation with rate limit handling"""
     try:
-        # Skip optimization for simple queries to make it process faster
         if len(query.split()) < 5 and not any(word in query.lower() for word in ['calculate', 'tax', 'percentage']):
             optimized_query = query
         else:
@@ -186,7 +199,7 @@ def get_chat_response(query: str, context: str) -> str:
             }
         ]
 
-        response = openai.ChatCompletion.create(  # Use openai module directly
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
             temperature=0.3,
@@ -194,6 +207,9 @@ def get_chat_response(query: str, context: str) -> str:
         )
 
         return response.choices[0].message.content
+    except openai.error.RateLimitError as e:
+        handle_rate_limit(e)
+        return get_chat_response(query, context)  # Retry the request
     except Exception as e:
         return f"Error: {str(e)}"
 
@@ -249,7 +265,6 @@ if prompt := st.chat_input("Ask about the Budget..."):
         message_placeholder.markdown("🤔 Processing...")
 
         try:
-            # Check cache first
             if prompt in st.session_state.cached_responses:
                 response = st.session_state.cached_responses[prompt]
                 relevant_chunks = st.session_state.cached_responses[f"{prompt}_chunks"]
@@ -264,7 +279,6 @@ if prompt := st.chat_input("Ask about the Budget..."):
                 context = "\n".join([chunk['content'] for chunk in relevant_chunks])
                 response = get_chat_response(prompt, context)
 
-                # Cache the response and chunks
                 st.session_state.cached_responses[prompt] = response
                 st.session_state.cached_responses[f"{prompt}_chunks"] = relevant_chunks
 
