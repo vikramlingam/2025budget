@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+import openai  # Correct import for the OpenAI library
 import json
 import numpy as np
 from numpy.linalg import norm
@@ -7,23 +7,19 @@ import os
 from typing import List, Dict
 import re
 
-@st.cache_resource
-def get_openai_client():
+def init_openai_client():
     """Initialize OpenAI client with proper error handling"""
     try:
         if not st.secrets.get("OPENAI_API_KEY"):
             st.error("OpenAI API key not found in secrets!")
             st.stop()
 
-        return OpenAI(
-            api_key=st.secrets["OPENAI_API_KEY"]
-        )
+        openai.api_key = st.secrets["OPENAI_API_KEY"]
     except Exception as e:
         st.error(f"Failed to initialize OpenAI client: {str(e)}")
         st.stop()
-        return None
 
-client = get_openai_client()
+init_openai_client()
 
 def convert_indian_format(value_str: str) -> float:
     """Convert Indian number format (crores, lakhs) to float"""
@@ -76,7 +72,7 @@ def optimize_prompt(original_query: str) -> str:
             }
         ]
 
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
             temperature=0.3,
@@ -103,7 +99,7 @@ def load_embeddings() -> List[Dict]:
 def create_embedding(text: str) -> List[float]:
     """Create embedding for search query with caching"""
     try:
-        response = client.embeddings.create(
+        response = openai.Embedding.create(
             model="text-embedding-ada-002",
             input=text
         )
