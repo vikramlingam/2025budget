@@ -12,7 +12,6 @@ This tool is ideal for individuals, researchers, and professionals seeking quick
 ## Features
 - **Query Answering**: Ask questions about the Union Budget 2025-26, and the app retrieves relevant information and generates concise answers.
 - **Retrieval-Augmented Generation (RAG)**: Combines semantic search with GPT-3.5-turbo to provide accurate and contextually relevant responses.
-- **Indian Number Format Support**: Handles Indian currency formats (crores, lakhs) for calculations and displays.
 - **Semantic Search**: Uses embeddings to retrieve the most relevant sections of the budget document for each query.
 - **Rate Limit Handling**: Automatically retries API calls when OpenAI rate limits are reached.
 - **Caching**: Speeds up performance by caching embeddings, optimized prompts, and responses.
@@ -33,7 +32,7 @@ Follow these steps to set up and run the app locally:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-username/budget-2025-26-assistant.git
+   git clone https://github.com/vikramlingam/2025budget.git
    cd budget-2025-26-assistant
    ```
 
@@ -74,21 +73,9 @@ Follow these steps to set up and run the app locally:
 ### Sample Queries
 - "What are the major infrastructure projects announced?"
 - "What is the fiscal deficit target for 2025-26?"
-- "Compare the agriculture budget with the previous year."
+- "Calculate tax if the income is 45 lakh rupees under new regime."
 - "What are the changes in income tax slabs?"
 
 ---
 
-## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## Acknowledgments
-- **OpenAI**: For providing the GPT-3.5-turbo and embedding models.
-- **Streamlit**: For the interactive web app framework.
-- **Government of India**: For the Union Budget 2025-26 document.
-
----
-
-Feel free to contribute to this project by submitting issues or pull requests. For any questions, contact [your-email@example.com].
+Feel free to contribute to this project by submitting issues or pull requests.
