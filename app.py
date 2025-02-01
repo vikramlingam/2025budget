@@ -8,11 +8,12 @@ from typing import List, Dict
 import re
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+if 'OPENAI_API_KEY' not in st.secrets:
+    st.error('OpenAI API key not found! Please add it to your app secrets.')
+    st.stop()
 
-# Enhanced Utility Functions
+client = OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
+
 def convert_indian_format(value_str: str) -> float:
     """Convert Indian number format (crores, lakhs) to float"""
     value_str = value_str.lower().replace(',', '')
@@ -75,7 +76,7 @@ def optimize_prompt(original_query: str) -> str:
     except Exception as e:
         return original_query
 
-# Core RAG Functions
+#RAG funcitons will start here
 @st.cache_data
 def load_embeddings() -> List[Dict]:
     """Load pre-computed embeddings"""
@@ -107,7 +108,7 @@ def semantic_search(query: str, chunks: List[Dict], top_k: int = 3) -> List[Dict
     if not query_embedding:
         return []
 
-    # Use numpy for faster computation
+    # Using numpy for faster computation, otherwise there is a delay
     chunk_embeddings = np.array([chunk['embedding'] for chunk in chunks])
     query_embedding = np.array(query_embedding)
 
@@ -123,7 +124,7 @@ def semantic_search(query: str, chunks: List[Dict], top_k: int = 3) -> List[Dict
 
 def analyze_calculation_request(query: str) -> dict:
     """Streamlined calculation analysis"""
-    # Quick check without API call
+    # Quick check without API call 
     calculation_keywords = ['calculate', 'compute', 'what is the tax', 'percentage',
                           'growth rate', 'difference between']
     if not any(keyword in query.lower() for keyword in calculation_keywords):
@@ -156,7 +157,7 @@ def analyze_calculation_request(query: str) -> dict:
 def get_chat_response(query: str, context: str) -> str:
     """Optimized response generation"""
     try:
-        # Skip optimization for simple queries
+        # Skip optimization for simple queries to make it process faster
         if len(query.split()) < 5 and not any(word in query.lower() for word in ['calculate', 'tax', 'percentage']):
             optimized_query = query
         else:
@@ -187,7 +188,7 @@ def get_chat_response(query: str, context: str) -> str:
     except Exception as e:
         return f"Error: {str(e)}"
 
-# Streamlit UI
+# Streamlit user interface
 st.set_page_config(layout="wide", page_title="Budget 2025-26 Assistant")
 
 # Sidebar
