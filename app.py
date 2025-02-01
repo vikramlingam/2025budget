@@ -7,25 +7,23 @@ import os
 from typing import List, Dict
 import re
 
-def init_openai_client():
+@st.cache_resource
+def get_openai_client():
+    """Initialize OpenAI client with proper error handling"""
     try:
-        api_key = st.secrets["OPENAI_API_KEY"]
-        if not api_key:
-            st.error("OpenAI API key not found in secrets.")
+        if not st.secrets.get("OPENAI_API_KEY"):
+            st.error("OpenAI API key not found in secrets!")
             st.stop()
+
         return OpenAI(
-            api_key=api_key,
-            timeout=60.0  # Adding a timeout
+            api_key=st.secrets["OPENAI_API_KEY"]
         )
     except Exception as e:
-        st.error(f"Error initializing OpenAI client: {str(e)}")
+        st.error(f"Failed to initialize OpenAI client: {str(e)}")
         st.stop()
+        return None
 
-client = init_openai_client()
-
-if not client:
-    st.error("Failed to initialize OpenAI client")
-    st.stop()
+client = get_openai_client()
 
 def convert_indian_format(value_str: str) -> float:
     """Convert Indian number format (crores, lakhs) to float"""
