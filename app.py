@@ -9,16 +9,23 @@ import re
 
 def init_openai_client():
     try:
-        if 'OPENAI_API_KEY' in st.secrets:
-            return OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
-        else:
+        api_key = st.secrets["OPENAI_API_KEY"]
+        if not api_key:
             st.error("OpenAI API key not found in secrets.")
             st.stop()
+        return OpenAI(
+            api_key=api_key,
+            timeout=60.0  # Adding a timeout
+        )
     except Exception as e:
         st.error(f"Error initializing OpenAI client: {str(e)}")
         st.stop()
 
 client = init_openai_client()
+
+if not client:
+    st.error("Failed to initialize OpenAI client")
+    st.stop()
 
 def convert_indian_format(value_str: str) -> float:
     """Convert Indian number format (crores, lakhs) to float"""
