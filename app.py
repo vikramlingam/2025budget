@@ -233,10 +233,7 @@ with st.sidebar:
     - What are the key highlights of Budget 2025-26?
     - Calculate tax for income of 45 lakhs under new regime
     - What are the major infrastructure projects announced?
-    - Show the breakdown of healthcare spending
     - What are the changes in income tax slabs?
-    - What is the fiscal deficit target?
-    - Compare agriculture budget with previous year
     - What are the new schemes announced for startups?
     """)
 
