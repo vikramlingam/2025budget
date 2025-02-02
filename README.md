@@ -62,7 +62,7 @@ Follow these steps to set up and run the app locally:
 
 ---
 
-## Usage
+## Usage:
 1. **Ask Questions**:
    - Enter your query in the input box (e.g., "What are the key highlights of Budget 2025-26?" or "Calculate tax for income of 45 lakhs under the new regime").
 2. **View Responses**:
@@ -70,7 +70,7 @@ Follow these steps to set up and run the app locally:
 3. **Explore Sources**:
    - Expand the "Sources" section to view the specific sections of the budget document used to generate the response.
 
-### Sample Queries
+### Sample Queries:
 - "What are the major infrastructure projects announced?"
 - "What is the fiscal deficit target for 2025-26?"
 - "Calculate tax if the income is 45 lakh rupees under new regime."
